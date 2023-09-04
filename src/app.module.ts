@@ -6,9 +6,25 @@ import { JwtModule } from '@nestjs/jwt';
 import { RedisModule } from './redis/redis.module';
 import { MailModule } from './mail/mail.module';
 import { SmsModule } from './sms/sms.module';
-import { AccessJwtGuard } from './guards';
-import { RefreshJwtGuard } from './guards';
-import { AccessJwtStrategy, RefreshJwtStrategy } from './strategies';
+import {
+  AccessJwtGuard,
+  AdminGuard,
+  CheckLoggedInGuard,
+  RefreshJwtGuard,
+  SuperAdminGuard,
+} from './guards';
+import {
+  AccessJwtStrategy,
+  CheckLoggedInStrategy,
+  RefreshJwtStrategy,
+} from './strategies';
+import { ProfilesModule } from './profiles/profiles.module';
+import { CategoriesModule } from './categories/categories.module';
+import { AdminsModule } from './admins/admins.module';
+import { GenresModule } from './genres/genres.module';
+import { FilmsModule } from './films/films.module';
+import { IsValidCategoryId, IsValidFilmId, IsValidGenreId } from './validators';
+import { FilmGenresModule } from './film_genres/film_genres.module';
 
 @Module({
   imports: [
@@ -19,13 +35,26 @@ import { AccessJwtStrategy, RefreshJwtStrategy } from './strategies';
     RedisModule,
     MailModule,
     SmsModule,
+    ProfilesModule,
+    CategoriesModule,
+    AdminsModule,
+    GenresModule,
+    FilmsModule,
+    FilmGenresModule,
   ],
   controllers: [],
   providers: [
     AccessJwtGuard,
     RefreshJwtGuard,
+    CheckLoggedInGuard,
+    AdminGuard,
+    SuperAdminGuard,
     AccessJwtStrategy,
     RefreshJwtStrategy,
+    CheckLoggedInStrategy,
+    IsValidCategoryId,
+    IsValidFilmId,
+    IsValidGenreId,
   ],
 })
 export class AppModule {}

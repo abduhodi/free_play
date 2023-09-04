@@ -1,18 +1,15 @@
 import {
   ForbiddenException,
-  HttpException,
-  HttpStatus,
   Injectable,
   NotAcceptableException,
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import * as otpGeneator from 'otp-generator';
 import { RedisService } from '../redis/redis.service';
 import { MailService } from '../mail/mail.service';
@@ -64,8 +61,11 @@ export class UsersService {
       });
     }
     //generating token
-    const refresh = await this.generateRefreshToken(newUser.id);
-    const access = await this.generateAccessToken(newUser.id);
+    const refresh = await this.generateRefreshToken(
+      newUser.id,
+      newUser.isActive,
+    );
+    const access = await this.generateAccessToken(newUser.id, newUser.isActive);
     //hashing generated token
     const hashedToken = await bcrypt.hash(refresh, 7);
     //updating user's token field
@@ -131,8 +131,8 @@ export class UsersService {
       throw new NotFoundException('login or password is incorrect');
     }
     //generating token
-    const refresh = await this.generateRefreshToken(user.id);
-    const access = await this.generateAccessToken(user.id);
+    const refresh = await this.generateRefreshToken(user.id, user.isActive);
+    const access = await this.generateAccessToken(user.id, user.isActive);
     //hashing generated token
     const hashedToken = await bcrypt.hash(refresh, 7);
     //updating user's token field
@@ -151,9 +151,9 @@ export class UsersService {
     };
   }
 
-  async generateRefreshToken(id: number) {
+  async generateRefreshToken(id: number, isActive: boolean) {
     return this.jwtService.sign(
-      { id },
+      { id, isActive },
       {
         expiresIn: process.env.REFRESH_TOKEN_TIME,
         secret: process.env.REFRESH_TOKEN_SECRET,
@@ -161,9 +161,9 @@ export class UsersService {
     );
   }
 
-  async generateAccessToken(id: number) {
+  async generateAccessToken(id: number, isActive: boolean) {
     return this.jwtService.sign(
-      { id },
+      { id, isActive },
       {
         expiresIn: process.env.ACCESS_TOKEN_TIME,
         secret: process.env.ACCESS_TOKEN_SECRET,
@@ -172,16 +172,14 @@ export class UsersService {
   }
 
   async verifyUser(id: number, otp: string) {
+    const attempt = await this.redisService.count(id.toString() + '_count');
+    if (attempt > 3) {
+      throw new ForbiddenException('Too many attempts. Please try again later');
+    }
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new ForbiddenException('Invalid token');
     const userOtp = await this.redisService.get(id.toString());
     if (userOtp !== otp) {
-      const attempt = await this.redisService.count(id.toString() + '_count');
-      if (attempt > 3) {
-        throw new ForbiddenException(
-          'Too many attempts. Please try again later',
-        );
-      }
       throw new NotFoundException('otp is not matched');
     }
     await this.redisService.del(id.toString());
@@ -213,8 +211,8 @@ export class UsersService {
         'Your device has been blocked by our privacy',
       );
     }
-    const refresh = await this.generateRefreshToken(user.id);
-    const access = await this.generateAccessToken(user.id);
+    const refresh = await this.generateRefreshToken(user.id, user.isActive);
+    const access = await this.generateAccessToken(user.id, user.isActive);
     const hashedToken = await bcrypt.hash(refresh, 7);
     await this.prisma.user.update({
       where: { id },
@@ -240,5 +238,17 @@ export class UsersService {
       data: { refreshToken: null },
     });
     return { message: 'Signout success' };
+  }
+
+  async getAllUsers() {
+    return this.prisma.user.findMany({});
+  }
+
+  async getUserById(id: number) {
+    return this.prisma.user.findUnique({ where: { id } });
+  }
+
+  async deleteUserAccount(id: number) {
+    return this.prisma.user.delete({ where: { id } });
   }
 }

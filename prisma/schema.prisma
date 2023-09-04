@@ -11,16 +11,184 @@ datasource db {
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
-  login        String   @unique @db.VarChar(255)
-  password     String   @db.VarChar(255)
-  balans       Decimal  @db.Decimal(8, 2)  @default(0)
-  isActive     Boolean  @default(false)
-  isPremium    Boolean  @default(false)
-  refreshToken String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            Int                  @id @default(autoincrement())
+  login         String               @unique @db.VarChar(255)
+  password      String               @db.VarChar(255)
+  balans        Decimal              @default(0) @db.Decimal(8, 2)
+  isActive      Boolean              @default(false)
+  isPremium     Boolean              @default(false)
+  refreshToken  String?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  profiles      Profile[]
+  subscriptions User_Subscriptions[]
 
   @@map("users")
 }
 
+model Profile {
+  id         Int         @id @default(autoincrement())
+  userId     Int
+  user       User        @relation(fields: [userId], references: [id])
+  username   String
+  isAdult    Boolean
+  age        Int
+  gender     String
+  hasPIN     Boolean     @default(false)
+  pincode    Int?
+  avatarId   Int?
+  isMain     Boolean     @default(false)
+  comments   Comment[]
+  favourites Favourite[]
+
+  @@map("profiles")
+}
+
+model Favourite {
+  id        Int     @id @default(autoincrement())
+  profileId Int
+  profile   Profile @relation(fields: [profileId], references: [id])
+  filmId    Int
+  film      Film    @relation(fields: [filmId], references: [id])
+}
+
+model Film {
+  id             Int              @id @default(autoincrement())
+  title          String           @db.VarChar(255)
+  thumbnail      String           @db.VarChar(255)
+  description    String           @db.VarChar(1000)
+  rate           Decimal?          @db.Decimal(2, 1)
+  minAge         Int
+  year           Int
+  duration       Int
+  isSubsRequired Boolean          @default(false)
+  categoryId     Int
+  category       Category         @relation(fields: [categoryId], references: [id])
+  genres         Film_Genres[]
+  countries      Film_Countries[]
+  actors         Film_Actors[]
+  comments       Comment[]
+  favourites     Favourite[]
+
+  @@map("films")
+}
+
+model Category {
+  id               Int        @id @default(autoincrement())
+  name             String     @db.VarChar(255)
+  parentCategoryId Int?
+  parentCategory   Category?  @relation("parentCategory", fields: [parentCategoryId], references: [id])
+  subCategories    Category[] @relation("parentCategory")
+  films            Film[]
+  tv               TV[]
+
+  @@map("categories")
+}
+
+model Genre {
+  id    Int           @id @default(autoincrement())
+  name  String
+  films Film_Genres[]
+
+  @@map("genres")
+}
+
+model Film_Genres {
+  id      Int   @id @default(autoincrement())
+  filmId  Int
+  film    Film  @relation(fields: [filmId], references: [id])
+  genreId Int
+  genre   Genre @relation(fields: [genreId], references: [id])
+
+  @@map("film_genres")
+}
+
+model Country {
+  id    Int              @id @default(autoincrement())
+  name  String
+  films Film_Countries[]
+
+  @@map("countries")
+}
+
+model Film_Countries {
+  id        Int     @id @default(autoincrement())
+  filmId    Int
+  film      Film    @relation(fields: [filmId], references: [id])
+  countryId Int
+  country   Country @relation(fields: [countryId], references: [id])
+
+  @@map("film_countries")
+}
+
+model TV {
+  id             Int      @id @default(autoincrement())
+  url            String
+  categoryId     Int
+  category       Category @relation(fields: [categoryId], references: [id])
+  isSubsRequired Boolean  @default(false)
+
+  @@map("tv")
+}
+
+model Actor {
+  id           Int           @id @default(autoincrement())
+  name         String        @db.VarChar(255)
+  profilePhoto String        @db.VarChar(255)
+  films        Film_Actors[]
+
+  @@map("actors")
+}
+
+model Film_Actors {
+  id      Int   @id @default(autoincrement())
+  filmId  Int
+  film    Film  @relation(fields: [filmId], references: [id])
+  actorId Int
+  actor   Actor @relation(fields: [actorId], references: [id])
+
+  @@map("film_actors")
+}
+
+model Comment {
+  id        Int     @id @default(autoincrement())
+  filmId    Int
+  film      Film    @relation(fields: [filmId], references: [id])
+  profileId Int
+  profile   Profile @relation(fields: [profileId], references: [id])
+
+  @@map("comments")
+}
+
+model Admin {
+  id           Int     @id @default(autoincrement())
+  login        String  @unique @db.VarChar(255)
+  password     String  @db.VarChar(255)
+  username     String?
+  isActive     Boolean @default(true)
+  isSuper      Boolean @default(false)
+  refreshToken String?
+
+  @@map("admins")
+}
+
+model Subscription {
+  id          Int                  @id @default(autoincrement())
+  name        String               @db.VarChar(255)
+  description String
+  price       Decimal              @db.Decimal(8, 2)
+  users       User_Subscriptions[]
+
+  @@map("subscriptions")
+}
+
+model User_Subscriptions {
+  id             Int          @id @default(autoincrement())
+  userId         Int
+  user           User         @relation(fields: [userId], references: [id])
+  subscriptionId Int
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id])
+  expireDate     DateTime
+
+  @@map("user_subscriptions")
+}

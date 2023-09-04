@@ -1,5 +1,5 @@
 {
-  "name": "SPlay",
+  "name": "FreePlay",
   "version": "0.0.1",
   "description": "",
   "author": "",
@@ -28,6 +28,7 @@
     "@nestjs/mapped-types": "*",
     "@nestjs/passport": "^10.0.1",
     "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/swagger": "^7.1.10",
     "@prisma/client": "^5.2.0",
     "axios": "^1.5.0",
     "bcrypt": "^5.1.1",
@@ -36,13 +37,15 @@
     "cookie-parser": "^1.4.6",
     "form-data": "^4.0.0",
     "hbs": "^4.2.0",
+    "nest-winston": "^1.9.4",
     "otp-generator": "^4.0.1",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
     "redis": "^4.6.8",
     "reflect-metadata": "^0.1.13",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "winston": "^3.10.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",

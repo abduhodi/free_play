@@ -1,20 +1,19 @@
-import {
-  IsNotEmpty,
-  IsString,
-  IsStrongPassword,
-  Validate,
-} from 'class-validator';
+import { IsStrongPassword, Validate } from 'class-validator';
+import { LoginValidator } from '../../validators';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateUserDto {
-  @Validate((login: string) => {
-    const isEmail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(
-      login,
-    );
-    const isPhone = /^\+998\d{9}$/.test(login);
-    isEmail || isPhone ? true : false;
+  @ApiProperty({
+    description: 'login',
+    example: 'example@mail.ru',
   })
+  @Validate(LoginValidator, { message: 'Enter either email or phone number' })
   login: string;
 
+  @ApiProperty({
+    description: 'password',
+    example: 'passwd123',
+  })
   @IsStrongPassword({ minLength: 6, minSymbols: 0, minUppercase: 0 })
   password: string;
 }

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotAcceptableException,
@@ -16,6 +17,8 @@ import { MailService } from '../mail/mail.service';
 import { SmsService } from '../sms/sms.service';
 import { User } from '@prisma/client';
 import { RefreshJwtPayload } from '../types';
+import { UpdateLoginDto } from '../admins/dto/update-login.dto';
+import { UpdatePasswordDto } from '../admins/dto/update-password.dto';
 
 @Injectable()
 export class UsersService {
@@ -250,5 +253,36 @@ export class UsersService {
 
   async deleteUserAccount(id: number) {
     return this.prisma.user.delete({ where: { id } });
+  }
+
+  async updateUserLogin(id: number, updateLoginDto: UpdateLoginDto) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new BadRequestException('User is not exists');
+    const existLogin = await this.prisma.user.findUnique({
+      where: { login: updateLoginDto.login },
+    });
+    if (existLogin) throw new BadRequestException('Login is already exists');
+    //TODO verify with otp
+    const updatedUser = await this.prisma.user.update({
+      where: { id },
+      data: updateLoginDto,
+    });
+    return { message: 'Update Login success', updatedUser };
+  }
+
+  async updateUserPassword(id: number, updatePasswordDto: UpdatePasswordDto) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new BadRequestException('User is not exists');
+    const { confirmPassword, newPassword, oldPassword } = updatePasswordDto;
+    if (confirmPassword !== newPassword)
+      throw new BadRequestException('Confirm password is not matched');
+    if (!(await bcrypt.compare(oldPassword, user.password)))
+      throw new BadRequestException('Password is not matched');
+    const hashedPassword = await bcrypt.hash(newPassword, 7);
+    const updatedUser = await this.prisma.user.update({
+      where: { id },
+      data: { password: hashedPassword },
+    });
+    return { message: 'Update Password success', updatedUser };
   }
 }

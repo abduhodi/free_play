@@ -1,5 +1,7 @@
-import { IsInt, IsOptional, IsPositive } from 'class-validator';
+import { IsInt, IsOptional, IsPositive, Validate } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsValidGenreId } from '../../validators';
+import { IsValidCountryId } from '../../validators';
 
 export class FilmFilterDto {
   @ApiProperty({
@@ -9,6 +11,7 @@ export class FilmFilterDto {
   })
   @IsOptional()
   @IsInt()
+  @Validate(IsValidCountryId)
   countryId?: number;
 
   @ApiProperty({
@@ -18,6 +21,7 @@ export class FilmFilterDto {
   })
   @IsOptional()
   @IsInt()
+  @Validate(IsValidGenreId)
   genreId?: number;
 
   @ApiProperty({

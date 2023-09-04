@@ -35,6 +35,8 @@ import { UpdateFilmDto } from '../films/dto/update-film.dto';
 import { UsersService } from '../users/users.service';
 import { CreateFilmGenreDto } from '../film_genres/dto/create-film_genre.dto';
 import { FilmGenresService } from '../film_genres/film_genres.service';
+import { UpdateLoginDto } from './dto/update-login.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 
 @ApiTags('Admin')
 @Controller('admins')
@@ -50,26 +52,36 @@ export class AdminsController {
   ) {}
 
   @ApiOperation({ summary: 'get-single-admin' })
-  @Get('get-profile/:id')
-  @UseGuards(AdminGuard, SelfGuard)
-  findOneAdmin(@Param('id', ParseIntPipe) id: number) {
+  @Get('get-profile')
+  @UseGuards(AdminGuard)
+  findOneAdmin(@GetUserId() id: number) {
     return this.adminsService.findAdmin(id);
   }
 
-  @ApiOperation({ summary: 'self-update-admin' })
-  @Patch('update-profile/:id')
-  @UseGuards(AdminGuard, SelfGuard)
-  updateAdmin(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateAdminDto: UpdateAdminDto,
+  @ApiOperation({ summary: 'self-update-login-admin' })
+  @Patch('update-login')
+  @UseGuards(AdminGuard)
+  updateAdminLogin(
+    @GetUserId() id: number,
+    @Body() updateLoginDto: UpdateLoginDto,
   ) {
-    return this.adminsService.updateAdmin(+id, updateAdminDto);
+    return this.adminsService.updateAdminLogin(id, updateLoginDto);
+  }
+
+  @ApiOperation({ summary: 'self-update-password-admin' })
+  @Patch('update-password')
+  @UseGuards(AdminGuard)
+  updateAdminPassword(
+    @GetUserId() id: number,
+    @Body() updatePasswordDto: UpdatePasswordDto,
+  ) {
+    return this.adminsService.updateAdminPassword(id, updatePasswordDto);
   }
 
   @ApiOperation({ summary: 'self-delete-admin' })
-  @Delete('delete-profile/:id')
-  @UseGuards(AdminGuard, SelfGuard)
-  removeAdmin(@Param('id', ParseIntPipe) id: number) {
+  @Delete('delete-profile')
+  @UseGuards(AdminGuard)
+  removeAdmin(@GetUserId() id: number) {
     return this.adminsService.removeAdmin(id);
   }
 
@@ -83,9 +95,10 @@ export class AdminsController {
     return this.adminsService.signin(signinDto, res);
   }
 
+  @Public()
   @ApiOperation({ summary: 'refresh-tokens-admin' })
   @Post('refresh')
-  @UseGuards(AdminGuard)
+  @UseGuards(RefreshJwtGuard, AdminGuard)
   async refresh(
     @GetTokenFromCookie('free_play_key') token: string,
     @Res({ passthrough: true }) res: Response,

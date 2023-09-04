@@ -1,7 +1,12 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { Response } from 'express';
 
 @Injectable()
 export class ProfilesService {
@@ -54,5 +59,15 @@ export class ProfilesService {
       include: { user: true },
       data: updateProfileDto,
     });
+  }
+
+  async selectProfile(userId: number, profileId: number, res: Response) {
+    const profile = await this.prisma.profile.findFirst({
+      where: { id: profileId, userId },
+      include: { user: true },
+    });
+    if (!profile) throw new NotFoundException('Profile is not found');
+    res.cookie('free_play_profile_id', profile.id);
+    return { message: 'Selected profile: ' + profile.username };
   }
 }

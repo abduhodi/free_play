@@ -25,28 +25,32 @@ export class CategoriesService {
   }
 
   async findOneById(id: number, filter: FilmFilterDto) {
-    const sort = {};
-    if (filter.countryId) {
-      sort['countryId'] = filter.countryId;
-    }
-    if (filter.genreId) {
-      sort['genreId'] = filter.genreId;
-    }
-    if (filter.rate) {
-      sort['rate'] = { gte: filter.rate };
-    }
-    if (filter.year) {
-      sort['year'] = filter.year;
-    }
-    return this.prisma.category.findMany({
-      where: { id },
-      include: { parentCategory: true, films: true },
+    const data = await this.prisma.category.findMany({
+      where: {
+        id,
+      },
+      select: { films: { include: { countries: true, genres: true } } },
     });
-  }
-
-  async findOneByName(name: string) {
-    return this.prisma.category.findMany({
-      where: { name },
+    if (data.length < 1) throw new NotFoundException('Category is empty');
+    const filmData = data[0].films;
+    return filmData.filter((film) => {
+      let sort = true;
+      if (filter.countryId) {
+        sort =
+          sort &&
+          film.countries.some((cnt) => cnt.countryId === filter.countryId);
+      }
+      if (filter.genreId) {
+        sort =
+          sort && film.genres.some((cnt) => cnt.genreId === filter.genreId);
+      }
+      if (filter.rate) {
+        sort = sort && film.rate ? film.rate.greaterThan(filter.rate) : false;
+      }
+      if (filter.year) {
+        sort = sort && film.year >= filter.year;
+      }
+      return sort;
     });
   }
 

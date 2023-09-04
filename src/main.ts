@@ -5,7 +5,8 @@ import { ValidationPipe } from '@nestjs/common';
 import { useContainer } from 'class-validator';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { LoggerFactory } from './logger/loggerFactory';
-
+// import * as bcrypt from 'bcrypt';
+// console.log(bcrypt.hashSync('pass123', 7));
 async function start() {
   try {
     const app = await NestFactory.create(AppModule, {

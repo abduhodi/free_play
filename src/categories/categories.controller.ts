@@ -32,9 +32,4 @@ export class CategoriesController {
   ) {
     return this.categoriesService.findOneById(id, filter);
   }
-
-  // @Get('by-name/:name')
-  // findOneByName(@Param('name') name: string) {
-  //   return this.categoriesService.findOneByName(name);
-  // }
 }

@@ -25,6 +25,7 @@ import { GenresModule } from './genres/genres.module';
 import { FilmsModule } from './films/films.module';
 import { IsValidCategoryId, IsValidFilmId, IsValidGenreId } from './validators';
 import { FilmGenresModule } from './film_genres/film_genres.module';
+import { FavouritesModule } from './favourites/favourites.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { FilmGenresModule } from './film_genres/film_genres.module';
     GenresModule,
     FilmsModule,
     FilmGenresModule,
+    FavouritesModule,
   ],
   controllers: [],
   providers: [

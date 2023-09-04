@@ -22,6 +22,8 @@ import {
 } from '../guards';
 import { CreateUserDto, VerifyUserDto } from './dto';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { UpdatePasswordDto } from '../admins/dto/update-password.dto';
+import { UpdateLoginDto } from '../admins/dto/update-login.dto';
 
 @ApiTags('User')
 @UseGuards(AccessJwtGuard)
@@ -55,8 +57,9 @@ export class UsersController {
     return this.usersService.verifyUser(id, verifyDto.otp.toString());
   }
 
+  @Public()
   @ApiOperation({ summary: 'refresh-tokens' })
-  @UseGuards(ActiveUserGuard, CheckLoggedInGuard)
+  @UseGuards(RefreshJwtGuard, CheckLoggedInGuard)
   @Post('refresh') //verify otp
   async refresh(
     @GetTokenFromCookie('free_play_key') token: string,
@@ -84,13 +87,10 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'delete-user-account' })
-  @UseGuards(ActiveUserGuard, CheckLoggedInGuard, SelfGuard)
-  @Delete('delete-account/:id')
-  deleteUserAccount(
-    @Param('id', ParseIntPipe) id: number,
-    @GetUserId() userId: number,
-  ) {
-    return this.usersService.deleteUserAccount(id);
+  @UseGuards(ActiveUserGuard, CheckLoggedInGuard)
+  @Delete('delete-account')
+  deleteUserAccount(@GetUserId() userId: number) {
+    return this.usersService.deleteUserAccount(userId);
   }
 
   // @Get('settings')
@@ -98,15 +98,25 @@ export class UsersController {
   //   return this.usersService.create(signinDto);
   // }
 
-  // @Post('settings/change-password')
-  // changePassword(@Body() signinDto: CreateUserDto) {
-  //   return this.usersService.create(signinDto);
-  // }
+  @ApiOperation({ summary: 'change-user-password' })
+  @UseGuards(ActiveUserGuard, CheckLoggedInGuard)
+  @Post('settings/change-password')
+  changePassword(
+    @GetUserId() userId: number,
+    @Body() updatePasswordDto: UpdatePasswordDto,
+  ) {
+    return this.usersService.updateUserPassword(userId, updatePasswordDto);
+  }
 
-  // @Post('settings/change-login')
-  // changeLogin(@Body() signinDto: CreateUserDto) {
-  //   return this.usersService.create(signinDto);
-  // }
+  @ApiOperation({ summary: 'change-user-login' })
+  @UseGuards(ActiveUserGuard, CheckLoggedInGuard)
+  @Post('settings/change-login')
+  changeLogin(
+    @GetUserId() userId: number,
+    @Body() updateLoginDto: UpdateLoginDto,
+  ) {
+    return this.usersService.updateUserLogin(userId, updateLoginDto);
+  }
 
   // @Get('payment-history')
   // paymentAndHistory(@Body() signinDto: CreateUserDto) {

@@ -19,7 +19,10 @@ export class FilmsService {
   }
 
   async findOne(id: number) {
-    return this.prisma.film.findMany({ where: { id } });
+    return this.prisma.film.findMany({
+      where: { id },
+      include: { genres: { select: { genre: true } }, category: true },
+    });
   }
 
   async update(id: number, updateFilmDto: UpdateFilmDto) {

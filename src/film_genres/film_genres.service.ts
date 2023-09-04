@@ -27,6 +27,10 @@ export class FilmGenresService {
   }
 
   async update(id: number, updateFilmGenreDto: UpdateFilmGenreDto) {
+    const found = await this.prisma.film_Genres.findFirst({
+      where: { id },
+    });
+    if (!found) throw new BadRequestException('Not found film-genre');
     return this.prisma.film_Genres.update({
       where: { id },
       data: updateFilmGenreDto,
@@ -48,6 +52,8 @@ export class FilmGenresService {
   }
 
   async remove(id: number) {
+    const found = await this.prisma.film_Genres.findFirst({ where: { id } });
+    if (!found) throw new BadRequestException('Not found film-genre');
     return this.prisma.film_Genres.delete({ where: { id } });
   }
 }

@@ -12,6 +12,8 @@ import { RefreshJwtPayload } from '../types';
 import { JwtService } from '@nestjs/jwt';
 import { Response } from 'express';
 import { LoginDto } from './dto/login.dto';
+import { UpdateLoginDto } from './dto/update-login.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 
 @Injectable()
 export class AdminsService {
@@ -85,7 +87,6 @@ export class AdminsService {
     const updatedAdmin = await this.prisma.admin.update({
       where: { id },
       data: { isSuper: true },
-      select: {},
     });
     return { message: 'Update to Super Admin success', updatedAdmin };
   }
@@ -96,9 +97,39 @@ export class AdminsService {
     const updatedAdmin = await this.prisma.admin.update({
       where: { id },
       data: updateAdminDto,
-      select: {},
     });
-    return { message: 'Update Admin success', updatedAdmin };
+    return { message: 'Update Login success', updatedAdmin };
+  }
+
+  async updateAdminLogin(id: number, updateLoginDto: UpdateLoginDto) {
+    const admin = await this.prisma.admin.findUnique({ where: { id } });
+    if (!admin) throw new BadRequestException('Admin is not exists');
+    const existLogin = await this.prisma.admin.findFirst({
+      where: { login: updateLoginDto.login },
+    });
+    if (existLogin) throw new BadRequestException('Login is already exists');
+    //TODO verify with otp
+    const updatedAdmin = await this.prisma.admin.update({
+      where: { id },
+      data: updateLoginDto,
+    });
+    return { message: 'Update Login success', updatedAdmin };
+  }
+
+  async updateAdminPassword(id: number, updatePasswordDto: UpdatePasswordDto) {
+    const admin = await this.prisma.admin.findUnique({ where: { id } });
+    if (!admin) throw new BadRequestException('Admin is not exists');
+    const { confirmPassword, newPassword, oldPassword } = updatePasswordDto;
+    if (confirmPassword !== newPassword)
+      throw new BadRequestException('Confirm password is not matched');
+    if (!(await bcrypt.compare(oldPassword, admin.password)))
+      throw new BadRequestException('Password is not matched');
+    const hashedPassword = await bcrypt.hash(newPassword, 7);
+    const updatedAdmin = await this.prisma.admin.update({
+      where: { id },
+      data: { password: hashedPassword },
+    });
+    return { message: 'Update Password success', updatedAdmin };
   }
 
   async removeAdmin(id: number) {
@@ -116,9 +147,11 @@ export class AdminsService {
       });
     } catch (error) {
       //TODO delete admin's tokens
+      console.log(error);
       throw new ForbiddenException('Redirecting to the login page');
     }
     const { id } = decoded;
+    if (typeof id !== 'number') throw new ForbiddenException('Invalid token');
     const admin = await this.prisma.admin.findUnique({ where: { id } });
     if (!admin) {
       throw new ForbiddenException(

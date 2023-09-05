@@ -59,7 +59,7 @@ export class AdminsController {
   }
 
   @Get('upg/:id')
-  upg(@Param('id') id: number) {
+  upg(@Param('id', ParseIntPipe) id: number) {
     return this.adminsService.updateAdminSuper(id);
   }
 

@@ -8,6 +8,7 @@ import {
   Delete,
   ParseIntPipe,
   UseGuards,
+  Res,
 } from '@nestjs/common';
 import { ProfilesService } from './profiles.service';
 import { CreateProfileDto } from './dto/create-profile.dto';
@@ -81,7 +82,7 @@ export class ProfilesController {
   selectProfile(
     @Param('id', ParseIntPipe) profileId: number,
     @GetUserId() userId: number,
-    res: Response,
+    @Res({ passthrough: true }) res: Response,
   ) {
     return this.profilesService.selectProfile(userId, profileId, res);
   }

@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  postgres:
+    container_name: postgres_db
+    image: postgres:14.0-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=${PG_USERNAME}
+      - POSTGRES_PASSWORD=${PG_PASSWORD}
+      - POSTGRES_DB=${PG_DATABASE}
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    ports:
+      - ${LOCAL_PORT}:${PG_PORT}
+  app:
+    container_name: free-play
+    build:
+      context: ./
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    ports:
+      - 3000:${PORT}
+    environment:
+      - PORT=${PORT}
+      - API_HOST=${API_HOST}
+      - DATABASE_URL=${DATABASE_URL}
+      - PG_USERNAME=${PG_USERNAME}
+      - PG_PASSWORD=${PG_PASSWORD}
+      - PG_PORT=${PG_PORT}
+      - PG_DATABASE=${PG_DATABASE}
+      - LOCAL_PORT=${LOCAL_PORT}
+      - PG_HOST=postgres
+      - REFRESH_TOKEN_TIME=${REFRESH_TOKEN_TIME}
+      - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
+      - ACCESS_TOKEN_TIME=${ACCESS_TOKEN_TIME}
+      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
+      - MAILER_HOST=${MAILER_HOST}
+      - MAILER_PORT=${MAILER_PORT}
+      - MAILDEV_USER=${MAILDEV_USER}
+      - MAILDEV_PASS=${MAILDEV_PASS}
+      - SMS_EMAIL=${SMS_EMAIL}
+      - SMS_PASSWORD=${SMS_PASSWORD}
+      - SMS_TOKEN=${SMS_TOKEN}
+      - REDIS_URL=${REDIS_URL}
+      - SMS_SERVICE_URL=${SMS_SERVICE_URL}
+      - DEBUG=${DEBUG}
+      - USE_JSON_LOGGER=${USE_JSON_LOGGER}

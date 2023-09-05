@@ -15,7 +15,6 @@ import * as otpGeneator from 'otp-generator';
 import { RedisService } from '../redis/redis.service';
 import { MailService } from '../mail/mail.service';
 import { SmsService } from '../sms/sms.service';
-import { User } from '@prisma/client';
 import { RefreshJwtPayload } from '../types';
 import { UpdateLoginDto } from '../admins/dto/update-login.dto';
 import { UpdatePasswordDto } from '../admins/dto/update-password.dto';
@@ -37,7 +36,7 @@ export class UsersService {
       where: { login: createUserDto.login },
     });
     //checking user is exists and it is active or not
-    let newUser: User;
+    let newUser: any;
     let hashedPassword: string;
     if (user) {
       if (user.isActive) {

@@ -29,8 +29,8 @@ export class CheckLoggedInStrategy extends PassportStrategy(
     if (!token) throw new ForbiddenException('Login required');
     const match = await bcrypt.compare(token, user.refreshToken);
     if (!match) throw new ForbiddenException('Login required');
-    const profileId = req.cookies['free_play_profile_id'];
-    if (!profileId) throw new ForbiddenException('checkout profile required');
+    // const profileId = req.cookies['free_play_profile_id'];
+    // if (!profileId) throw new ForbiddenException('checkout profile required');
     return payload;
   }
 }

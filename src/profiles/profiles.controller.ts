@@ -75,6 +75,7 @@ export class ProfilesController {
     );
   }
 
+  @UseGuards(CheckLoggedInGuard)
   @ApiOperation({ summary: 'select-profile' })
   @Get('select-profile/:id')
   selectProfile(

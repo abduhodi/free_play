@@ -58,11 +58,6 @@ export class AdminsController {
     return this.adminsService.findAdmin(id);
   }
 
-  @Get('upg/:id')
-  upg(@Param('id', ParseIntPipe) id: number) {
-    return this.adminsService.updateAdminSuper(id);
-  }
-
   @ApiOperation({ summary: 'self-update-login-admin' })
   @Patch('update-login')
   @UseGuards(AdminGuard)

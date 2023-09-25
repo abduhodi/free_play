@@ -22,6 +22,8 @@ model User {
   updatedAt     DateTime             @updatedAt
   profiles      Profile[]
   subscriptions User_Subscriptions[]
+  sessions Session[]
+  payments Payment[]
 
   @@map("users")
 }
@@ -29,7 +31,7 @@ model User {
 model Profile {
   id         Int         @id @default(autoincrement())
   userId     Int
-  user       User        @relation(fields: [userId], references: [id])
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   username   String
   isAdult    Boolean
   age        Int
@@ -47,9 +49,11 @@ model Profile {
 model Favourite {
   id        Int     @id @default(autoincrement())
   profileId Int
-  profile   Profile @relation(fields: [profileId], references: [id])
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   filmId    Int
   film      Film    @relation(fields: [filmId], references: [id])
+
+  @@map("favourites")
 }
 
 model Film {
@@ -62,13 +66,16 @@ model Film {
   year           Int
   duration       Int
   isSubsRequired Boolean          @default(false)
-  categoryId     Int
-  category       Category         @relation(fields: [categoryId], references: [id])
+  categoryId     Int?
+  category       Category?          @relation(fields: [categoryId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   genres         Film_Genres[]
   countries      Film_Countries[]
   actors         Film_Actors[]
   comments       Comment[]
   favourites     Favourite[]
+  collections Collection_Films[]
+  trailers Trailer[]
+  episodes Episode[]
 
   @@map("films")
 }
@@ -77,7 +84,7 @@ model Category {
   id               Int        @id @default(autoincrement())
   name             String     @db.VarChar(255)
   parentCategoryId Int?
-  parentCategory   Category?  @relation("parentCategory", fields: [parentCategoryId], references: [id])
+  parentCategory   Category?  @relation("parentCategory", fields: [parentCategoryId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   subCategories    Category[] @relation("parentCategory")
   films            Film[]
   tv               TV[]
@@ -96,9 +103,9 @@ model Genre {
 model Film_Genres {
   id      Int   @id @default(autoincrement())
   filmId  Int
-  film    Film  @relation(fields: [filmId], references: [id])
+  film    Film  @relation(fields: [filmId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   genreId Int
-  genre   Genre @relation(fields: [genreId], references: [id])
+  genre   Genre @relation(fields: [genreId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@map("film_genres")
 }
@@ -114,9 +121,9 @@ model Country {
 model Film_Countries {
   id        Int     @id @default(autoincrement())
   filmId    Int
-  film      Film    @relation(fields: [filmId], references: [id])
+  film      Film    @relation(fields: [filmId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   countryId Int
-  country   Country @relation(fields: [countryId], references: [id])
+  country   Country @relation(fields: [countryId], references: [id], onUpdate: Cascade)
 
   @@map("film_countries")
 }
@@ -124,8 +131,8 @@ model Film_Countries {
 model TV {
   id             Int      @id @default(autoincrement())
   url            String
-  categoryId     Int
-  category       Category @relation(fields: [categoryId], references: [id])
+  categoryId     Int?
+  category       Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   isSubsRequired Boolean  @default(false)
 
   @@map("tv")
@@ -143,9 +150,9 @@ model Actor {
 model Film_Actors {
   id      Int   @id @default(autoincrement())
   filmId  Int
-  film    Film  @relation(fields: [filmId], references: [id])
+  film    Film  @relation(fields: [filmId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   actorId Int
-  actor   Actor @relation(fields: [actorId], references: [id])
+  actor   Actor @relation(fields: [actorId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@map("film_actors")
 }
@@ -153,9 +160,11 @@ model Film_Actors {
 model Comment {
   id        Int     @id @default(autoincrement())
   filmId    Int
-  film      Film    @relation(fields: [filmId], references: [id])
-  profileId Int
-  profile   Profile @relation(fields: [profileId], references: [id])
+  film      Film    @relation(fields: [filmId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  profileId Int?
+  profile   Profile? @relation(fields: [profileId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  rate Int
+  description String?
 
   @@map("comments")
 }
@@ -168,6 +177,7 @@ model Admin {
   isActive     Boolean @default(true)
   isSuper      Boolean @default(false)
   refreshToken String?
+  roles Admin_Roles[]
 
   @@map("admins")
 }
@@ -185,10 +195,93 @@ model Subscription {
 model User_Subscriptions {
   id             Int          @id @default(autoincrement())
   userId         Int
-  user           User         @relation(fields: [userId], references: [id])
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   subscriptionId Int
-  subscription   Subscription @relation(fields: [subscriptionId], references: [id])
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   expireDate     DateTime
 
   @@map("user_subscriptions")
+}
+
+model Collection{
+  id Int @id @default(autoincrement())
+  name String
+
+  films Collection_Films[]
+  @@map("collections")
+}
+
+model Collection_Films{
+  id Int @id @default(autoincrement())
+  collectionId Int?
+  collection Collection? @relation(fields: [collectionId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  filmId Int?
+  film Film? @relation(fields: [filmId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@map("collection_films")
+}
+
+model Trailer{
+  id Int @id @default(autoincrement())
+  filmId Int?
+  film Film? @relation(fields: [filmId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  url String
+
+  @@map("trailers")
+}
+
+model Episode{
+  id Int @id @default(autoincrement())
+  filmId Int?
+  film Film? @relation(fields: [filmId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  season Int @default(1)
+  url String
+
+  @@map("episodes")
+}
+
+model Avatars{
+  id Int @id @default(autoincrement())
+  name String
+
+  @@map("avatars")
+}
+
+model Role{
+  id Int @id @default(autoincrement())
+  name String
+
+  admins Admin_Roles[]
+  @@map("roles")
+}
+
+model Admin_Roles{
+  id Int @id @default(autoincrement())
+  adminId Int?
+  admin Admin? @relation(fields: [adminId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  roleId Int?
+  role Role? @relation(fields: [roleId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("admin_roles")
+}
+
+model Session{
+  id Int @id @default(autoincrement())
+  userId Int
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  session String?
+  date DateTime @default(now())
+  
+  @@map("sessions")
+}
+
+model Payment{
+  id Int @id @default(autoincrement())
+  userId Int
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  amount Decimal @db.Decimal(8, 2)
+  paymentType String
+  paymentDate DateTime @default(now())
+
+  @@map("payments")
 }

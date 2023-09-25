@@ -12,6 +12,6 @@ export const GetProfileIdFromCookie = createParamDecorator(
     if (!profileId) {
       throw new ForbiddenException('Token is not provided');
     }
-    return profileId;
+    return parseInt(profileId);
   },
 );

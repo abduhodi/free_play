@@ -42,10 +42,13 @@ export class ProfilesService {
     });
   }
 
-  deleteUserProfile(userId: number, profileId: number) {
+  async deleteUserProfile(userId: number, profileId: number) {
+    const profile = await this.prisma.profile.findFirst({
+      where: { id: profileId, userId },
+    });
+    if (!profile) throw new NotFoundException('Profile is not found');
     return this.prisma.profile.delete({
       where: { id: profileId, userId },
-      include: { user: true },
     });
   }
 

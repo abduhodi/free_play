@@ -21,7 +21,11 @@ export class CategoriesService {
   }
 
   async findAll() {
-    return this.prisma.category.findMany({ include: { films: true } });
+    const cats = await this.prisma.category.findMany({
+      include: { films: true },
+    });
+    if (cats.length < 1) throw new NotFoundException('Category is empty');
+    return { count: cats.length, categories: cats };
   }
 
   async findOneById(id: number, filter: FilmFilterDto) {
@@ -33,7 +37,7 @@ export class CategoriesService {
     });
     if (data.length < 1) throw new NotFoundException('Category is empty');
     const filmData = data[0].films;
-    return filmData.filter((film) => {
+    const sorted = filmData.filter((film) => {
       let sort = true;
       if (filter.countryId) {
         sort =
@@ -52,6 +56,8 @@ export class CategoriesService {
       }
       return sort;
     });
+    if (sorted.length < 1) throw new NotFoundException('Category is empty');
+    return { count: sorted.length, films: sorted };
   }
 
   async update(id: number, updateCategoryDto: UpdateCategoryDto) {
@@ -64,6 +70,9 @@ export class CategoriesService {
   }
 
   async remove(id: number) {
-    return this.prisma.category.delete({ where: { id } });
+    const cat = await this.prisma.category.findFirst({ where: { id } });
+    if (!cat) throw new NotFoundException('Category is not found');
+    await this.prisma.category.delete({ where: { id } });
+    return { message: 'Delete success' };
   }
 }

@@ -147,6 +147,7 @@ export class AdminsService {
       });
     } catch (error) {
       //TODO delete admin's tokens
+      res.clearCookie('free_play_key');
       console.log(error);
       throw new ForbiddenException('Redirecting to the login page');
     }
